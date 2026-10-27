@@ -67,7 +67,7 @@ erDiagram
     RESERVATION ||--o{ MENU_LINE : zawiera
     RESERVATION ||--o{ INVENTORY_REQUEST : wymaga
     INVENTORY_ITEM ||--o{ INVENTORY_REQUEST : realizuje
-    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : sledzi
+    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : śledzi
     SHIFT ||--o{ STAFF_ASSIGNMENT : zawiera
     REPORTING_PERIOD ||--o{ SALES_SNAPSHOT : podsumowuje
 ```
