@@ -2,9 +2,9 @@
 
 > Publiczne case study zawierające wyłącznie dokumentację. Nie zawiera kodu aplikacji, danych klienta, danych logowania ani zrzutów ekranu z produkcji.
 
-Zaplanowałem i zbudowałem mobilną platformę operacyjną dla rodzinnego centrum rozrywki. Łączy ona rezerwacje, przekazanie zmiany, zadania działów, inwenturę i raportowanie w jednym systemie dostępnym z telefonu i komputera.
+W 221studio zaprojektowaliśmy i zbudowaliśmy mobilną platformę operacyjną dla rodzinnego centrum rozrywki. Łączy ona rezerwacje, przekazanie zmiany, zadania działów, inwenturę i raportowanie w jednym systemie dostępnym z telefonu i komputera.
 
-**Typ projektu:** wewnętrzna platforma operacyjna · **Zakres:** inżynieria produktu, projektowanie systemu, integracje i bezpieczeństwo operacyjne
+**Zespół:** 221studio · **Typ projektu:** wewnętrzna platforma operacyjna · **Zakres:** inżynieria produktu, projektowanie systemu, integracje i bezpieczeństwo operacyjne
 
 ## Problem
 
@@ -23,7 +23,7 @@ Platforma udostępnia każdemu działowi dopasowany widok tego samego dnia pracy
 
 ## Wartość biznesowa
 
-Produkt skupia powtarzalne zadania związane ze zmianą w jednym wspólnym miejscu. Ułatwia przekazywanie obowiązków, daje działom widoki dopasowane do ich zadań i pozwala prześledzić zmiany rezerwacji. Repozytorium nie zawiera zweryfikowanych pomiarów oszczędności czasu ani wzrostu przychodów, dlatego nie podaję liczbowego zwrotu z inwestycji.
+Produkt skupia powtarzalne zadania związane ze zmianą w jednym wspólnym miejscu. Ułatwia przekazywanie obowiązków, daje działom widoki dopasowane do ich zadań i pozwala prześledzić zmiany rezerwacji. Repozytorium nie zawiera zweryfikowanych pomiarów oszczędności czasu ani wzrostu przychodów, dlatego nie podajemy liczbowego zwrotu z inwestycji.
 
 ## Architektura systemu
 
@@ -55,7 +55,7 @@ Diagram przedstawia ogólny obraz oparty na konfiguracji wdrożeń i integracji 
 
 ## Najważniejsze wyzwania techniczne
 
-W dokumencie [Wyzwania techniczne](docs/technical-challenges.md) opisuję problemy, podejście projektowe i rezultaty. Omawiam role i przepływy pracy, synchronizację zewnętrznych systemów, historię operacyjną oraz bezpieczne migracje bazy.
+W dokumencie [Wyzwania techniczne](docs/technical-challenges.md) opisujemy problemy, podejście projektowe i rezultaty. Omawiamy role i przepływy pracy, synchronizację zewnętrznych systemów, historię operacyjną oraz bezpieczne migracje bazy.
 
 ## Model danych
 
@@ -74,11 +74,11 @@ erDiagram
 
 ## Materiały wizualne
 
-W tej wersji nie publikuję zrzutów ekranu ani linku do systemu produkcyjnego. Można je dodać po potwierdzeniu zgody klienta oraz zastąpieniu prawdziwych nazw, logo i danych operacyjnych zatwierdzonymi lub wygenerowanymi przykładami. Nie używam fikcyjnych zrzutów ani wymyślonych wskaźników.
+W tej wersji nie publikujemy zrzutów ekranu ani linku do systemu produkcyjnego. Można je dodać po potwierdzeniu zgody klienta oraz zastąpieniu prawdziwych nazw, logo i danych operacyjnych zatwierdzonymi lub wygenerowanymi przykładami. Nie używamy fikcyjnych zrzutów ani wymyślonych wskaźników.
 
 ## Zakres i prywatność
 
-To repozytorium jest case study, a nie uruchamialną aplikacją. Nie zawiera kodu źródłowego, zrzutów bazy, danych logowania, rekordów klientów ani identyfikatorów wdrożenia. Zasady dodawania materiałów opisuję w dokumencie [Zakres i prywatność](docs/scope-and-privacy.md).
+To repozytorium jest case study, a nie uruchamialną aplikacją. Nie zawiera kodu źródłowego, zrzutów bazy, danych logowania, rekordów klientów ani identyfikatorów wdrożenia. Zasady dodawania materiałów opisujemy w dokumencie [Zakres i prywatność](docs/scope-and-privacy.md).
 
 ## O tym case study
 
