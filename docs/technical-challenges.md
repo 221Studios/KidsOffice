@@ -1,39 +1,25 @@
-# Wyzwania techniczne
+# Decyzje techniczne
 
-Ten dokument opisuje problemy inżynierskie widoczne w projekcie systemu oraz zastosowane podejście. Nie ujawnia danych klienta i nie przypisuje projektowi niezmierzonych wyników.
+## Uprawnienia nie zależą od aktualnego ekranu
 
-## 1. Jeden dzień operacyjny, wiele przepływów pracy
+Telefon personelu ma przypisaną rolę, natomiast użytkownik może przełączać widoki działów. Zdecydowaliśmy się rozdzielić te dwa pojęcia: zmiana ekranu nie zmienia roli ani zakresu dostępu urządzenia. Dzięki temu organizator może przejść do widoku kuchni, nie zmieniając kontekstu uprawnień.
 
-**Problem.** Organizatorzy, recepcja, kierownicy zmiany, kuchnia, animatorzy, HR i serwis współdzielą informacje, ale podczas zmiany potrzebują różnych działań. Widok działu nie jest tym samym co tożsamość ani uprawnienia przypisane do urządzenia.
+Zmiany rezerwacji zapisujemy w historii razem z rolą, która wykonała operację. Usunięte rezerwacje zachowują osobny wpis historii. Audyt wskazuje rolę urządzenia, a nie imienną tożsamość pracownika.
 
-**Podejście.** Rozdzieliliśmy rolę personelu od widoku działu. Uprawnienia wynikające z roli chronią poszczególne przepływy, a widoki działów pokazują odpowiednie zadania na wspólnych rekordach operacyjnych. Zmiany rezerwacji zapisujemy w historii wraz z rolą wykonującą zapis; usunięte rezerwacje mają osobną historię.
+## Jeden model rezerwacji, dwa różne procesy
 
-**Rezultat.** Dzięki temu personel może przechodzić między widokami zadań bez niejawnej zmiany roli urządzenia, a ważne zmiany rezerwacji pozostają możliwe do prześledzenia. Historia nie identyfikuje konkretnej osoby — zapisuje rolę, a nie imię i nazwisko.
+Bankiet urodzinowy i rezerwacja stolika nie są tym samym formularzem z opcjonalnymi polami. Bankiet obejmuje dziecko, dodatki, menu i przygotowania wielu działów; rezerwacja stolika ma inny zestaw danych. Rozdzieliliśmy te typy, a wspólne elementy — jak termin, goście i historia — pozostawiliśmy powiązane z rezerwacją.
 
-## 2. Zewnętrzne systemy mają różne formaty danych i dostępność
+Model obsługuje też wiele tortów na jednej rezerwacji, każdy z własnym zdjęciem, oraz oddzielne pozycje menu. Zadania kuchni i animatorów mogą dzięki temu korzystać z konkretnych informacji z karty zamiast z jednego zbiorczego opisu.
 
-**Problem.** Dane o rezerwacjach i menu pochodzą z integracji POS, grafiki personelu z arkusza, a raportowanie wymaga stabilnych migawek miesięcznych. Używanie każdego zewnętrznego odczytu jako bieżącego źródła prawdy uzależniałoby codzienną pracę od dostępności tych usług.
+## Integracje bez uzależniania każdego widoku od dostawcy
 
-**Podejście.** Rozdzieliliśmy kod integracyjny według usług. Wybrane dane katalogowe POS przechowujemy w lokalnym odwzorowaniu, a lokalne pojęcia operacyjne mapujemy na zewnętrzne identyfikatory produktów. Dane raportowe zapisujemy w migawkach dla widoków miesięcznych. Grafiki odświeżamy ze źródła, zamiast traktować je jako dane personelu należące do aplikacji.
+Syrve dostarcza dane o rezerwacjach, menu, produktach i sprzedaży; grafiki pochodzą z Google Sheets. Wydzieliliśmy obsługę tych źródeł, a wybrane dane katalogowe POS odwzorowujemy lokalnie. Lokalny klucz produktu jest mapowany na identyfikator Syrve, dzięki czemu widoki operacyjne nie muszą opierać całego modelu na identyfikatorach dostawcy.
 
-**Rezultat.** Dzięki temu granice zewnętrznych integracji są jawne, a przepływy pracy nie muszą bezpośrednio zawierać identyfikatorów konkretnych dostawców. Nie deklarujemy określonej dostępności usług ani opóźnień synchronizacji.
+Statystyki zapisują migawki okresowe. Sprzedaż jedzenia z bankietów i sprzedaż codzienna ze stolików są raportowane osobno, a brak migawki nie jest prezentowany jako sprzedaż równa zero.
 
-## 3. Rezerwacje rozwijają się wraz z potrzebami operacyjnymi
+## Wdrożenie aplikacji i migracja bazy to osobne operacje
 
-**Problem.** Rezerwacja może obejmować wiele dodatków, tortów, pozycji menu, przypisań personelu, zmian statusu i późniejszych korekt. Pojedynczy płaski rekord staje się trudny do rozwijania i audytowania, gdy dochodzą nowe przepływy pracy.
+Nie uruchamiamy zmian schematu przy starcie serwisu produkcyjnego. Migrację można najpierw wykonać w trybie próbnym, a zastosowanie jej na produkcji wymaga jawnego potwierdzenia. Środowisko testowe korzysta z osobnej bazy.
 
-**Podejście.** Przyjęliśmy model relacyjny, w którym rezerwacja jest rekordem centralnym, a powtarzalne lub historyczne dane przechowujemy w powiązanych zbiorach, takich jak historia rezerwacji, pozycje menu, zapotrzebowanie magazynowe i migawki sprzedaży. Zmiany schematu wersjonujemy jako migracje.
-
-**Rezultat.** Model obsługuje bogatsze szczegóły operacyjne, zachowując rezerwację jako wspólny punkt odniesienia dla kolejnych zadań. Nie publikujemy dokładnych definicji tabel ani pól specyficznych dla klienta.
-
-## 4. Zmiany schematu produkcyjnego wymagają jawnych zabezpieczeń
-
-**Problem.** Migracja uruchamiana automatycznie przy starcie aplikacji może zamienić wdrożenie w nieprzejrzystą zmianę danych produkcyjnych.
-
-**Podejście.** Skonfigurowaliśmy aplikację tak, aby w produkcji pomijała inicjalizację schematu przy starcie. Migracje uruchamiamy osobnym poleceniem z trybem próbnym; zastosowanie zmian produkcyjnych wymaga dodatkowego jawnego potwierdzenia. Środowisko testowe korzysta z odizolowanej bazy.
-
-**Rezultat.** Oddzieliliśmy wdrożenie aplikacji od zmiany schematu produkcyjnego, dzięki czemu są to dwie możliwe do przejrzenia operacje. Ogranicza to ryzyko przypadkowych zmian podczas restartu, ale nie zastępuje kopii zapasowych ani sprawdzonego planu odtwarzania.
-
-## Dalsze potwierdzenie
-
-Oryginalna implementacja zawiera testy dotyczące rezerwacji, dostępu, integracji, raportów i migracji. To publiczne case study nie zawiera plików źródłowych ani testów; nie podaje liczby testów ani procentowego pokrycia.
+To rozdzielenie zapobiega temu, by zwykły restart lub deploy aplikacji przypadkowo zmieniał strukturę produkcyjnych danych. Zmiana schematu pozostaje osobną operacją, którą można zaplanować i przejrzeć.

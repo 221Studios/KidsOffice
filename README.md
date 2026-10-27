@@ -1,85 +1,82 @@
-# Platforma operacyjna parku — case study
+# KidsOffice
 
-> Publiczne case study zawierające wyłącznie dokumentację. Nie zawiera kodu aplikacji, danych klienta, danych logowania ani zrzutów ekranu z produkcji.
+### System operacyjny dla parku rozrywki
 
-W 221studio zaprojektowaliśmy i zbudowaliśmy mobilną platformę operacyjną dla rodzinnego centrum rozrywki. Łączy ona rezerwacje, przekazanie zmiany, zadania działów, inwenturę i raportowanie w jednym systemie dostępnym z telefonu i komputera.
+**Realizacja: 221studio** · Aplikacja wewnętrzna · Interfejs mobilny i desktopowy
 
-**Zespół:** 221studio · **Typ projektu:** wewnętrzna platforma operacyjna · **Zakres:** inżynieria produktu, projektowanie systemu, integracje i bezpieczeństwo operacyjne
+W 221studio stworzyliśmy aplikację, która porządkuje codzienną pracę parku rozrywki: od rezerwacji urodzin i przygotowania atrakcji, przez odprawę zespołu, po inwenturę i raporty sprzedaży. Każdy dział pracuje na tych samych danych, ale widzi zadania dopasowane do swojej roli.
 
-## Problem
+## Wyzwanie
 
-Codzienna praca obejmowała wiele ról i narzędzi. Zespoły musiały koordynować rezerwacje urodzinowe, obsadę sali, grafiki, zadania kuchni i animatorów, zapasy oraz raporty sprzedaży. Informacje musiały być zrozumiałe dla kolejnego zespołu przejmującego zmianę, a część danych źródłowych znajdowała się w zewnętrznych systemach.
+Obsługa jednego dnia łączy wiele zależnych od siebie zadań. Rezerwacja bankietu wpływa na przygotowanie kuchni, animatorów, recepcji i obsługi sali. Do tego dochodzą grafiki, przydział stref, zapasy i rozliczenia. Informacje z POS i arkusza grafików muszą być dostępne w tym samym kontekście co praca personelu.
 
-Platforma udostępnia każdemu działowi dopasowany widok tego samego dnia pracy, zachowując powiązania między rezerwacjami a zadaniami operacyjnymi.
+Najważniejszym problemem projektowym było połączenie tych procesów bez tworzenia jednego przeładowanego panelu. Organizator, kuchnia i kierownik zmiany potrzebują różnych widoków, lecz muszą pracować na wspólnym planie dnia.
 
-## Zakres produktu
+## Rozwiązanie
 
-- Bankiety urodzinowe i rezerwacje stolików, wraz z dodatkami, pozycjami menu, historią zmian i anulowań.
-- Mobilne widoki dla organizatorów, kierowników zmiany, recepcji, animatorów, kuchni, HR i serwisu.
-- Odprawy zmianowe, przypisania kelnerów do stref, grafiki działów i zadania sprzątania dla animatorów.
-- Ewidencja zapasów, zapotrzebowanie powiązane z rezerwacjami, lista zakupów i śledzenie wydań.
-- Miesięczne raporty operacyjne, z osobnymi migawkami sprzedaży bankietowej i codziennej sprzedaży stolikowej.
-- Integracje z systemem POS, arkuszem grafików, powiadomieniami push i relacyjną bazą danych w chmurze.
+Zaprojektowaliśmy aplikację mobilną z widokami odpowiadającymi rolom i zadaniom personelu. Rezerwacja jest punktem wyjścia dla przygotowań wielu działów, a odprawa, grafiki, inwentura i statystyki obsługują pozostałe części zmiany.
 
-## Wartość biznesowa
+### Główne obszary produktu
 
-Produkt skupia powtarzalne zadania związane ze zmianą w jednym wspólnym miejscu. Ułatwia przekazywanie obowiązków, daje działom widoki dopasowane do ich zadań i pozwala prześledzić zmiany rezerwacji. Repozytorium nie zawiera zweryfikowanych pomiarów oszczędności czasu ani wzrostu przychodów, dlatego nie podajemy liczbowego zwrotu z inwestycji.
+| Obszar | Co obsługuje |
+|---|---|
+| Rezerwacje | Bankiety urodzinowe i rezerwacje stolików, gości, lokalizacje na planie sali, dodatki, torty i pozycje menu. |
+| Widoki działów | Zadania organizatorów, recepcji, animatorów, kuchni, HR, serwisu i kierowników zmiany. |
+| Odprawa | Obsada stref sali, raport zmiany i materiały do wydruku. |
+| Grafiki | Tygodniowe i miesięczne grafiki działów, synchronizowane z arkusza. |
+| Inwentura | Stany magazynowe, zapotrzebowanie powiązane z rezerwacjami, zakupy i wydania. |
+| Statystyki | Miesięczne zestawienia bankietów, sprzedaży stolikowej i operacji. |
 
-## Architektura systemu
-
-System produkcyjny jest aplikacją webową renderowaną po stronie serwera i pakowaną jako obraz Docker. Aplikacja obsługuje interfejs mobilny oraz koordynuje zapis danych i integracje zewnętrzne. Lokalnie korzysta z SQLite, a wdrożenie hostowane używa PostgreSQL. Wybrane dane z usług zewnętrznych są lokalnie odwzorowywane lub zapisywane w migawkach, aby wspierać odczyty operacyjne.
+## Przepływ pracy
 
 ```mermaid
 flowchart LR
-    Staff[Telefony i komputery personelu] -->|HTTPS| App[Aplikacja webowa w Pythonie<br/>HTML, CSS, JavaScript]
-    App -->|środowisko lokalne| SQLite[(SQLite)]
-    App -->|wdrożenie hostowane| PG[(PostgreSQL<br/>Supabase)]
-    App -->|rezerwacje, menu i produkty| POS[Syrve]
-    App -->|odczyt grafików| Sheets[Google Sheets]
-    App -->|powiadomienia subskrybentów| Push[Web Push]
-    App -. obraz wdrożeniowy .-> Host[Fly.io]
+    A[Rezerwacja] --> B[Przygotowanie dodatków i menu]
+    B --> C[Zadania kuchni i animatorów]
+    C --> D[Odprawa i obsada sali]
+    D --> E[Realizacja zmiany]
+    E --> F[Inwentura i raport sprzedaży]
 ```
 
-Diagram przedstawia ogólny obraz oparty na konfiguracji wdrożeń i integracji projektu. Pomija identyfikatory klienta, adresy hostów, dane dostępowe i szczegóły sieci.
+Przykładowo bankiet może zawierać kilka tortów, pozycje menu, animacje i przypisanie kelnera. Kuchnia i animatorzy dostają własne listy pracy, a kierownik zmiany układa obsadę sali. Po zakończeniu dnia dane sprzedażowe są zapisywane w migawce wykorzystywanej w raportach.
 
-## Decyzje techniczne
-
-| Decyzja | Uzasadnienie |
-|---|---|
-| Aplikacja w Pythonie z lekką warstwą HTTP | Utrzymuje przepływy operacyjne w niewielkiej usłudze, bez osobnego serwera frontendu. |
-| HTML, CSS i JavaScript oraz interfejs mobilny | Personel korzysta z systemu podczas zmiany, często na telefonie; podstawowe zadania powinny być szybkie do znalezienia. |
-| SQLite lokalnie i PostgreSQL w środowisku hostowanym | Ułatwia lokalny rozwój, a jednocześnie zapewnia zarządzaną relacyjną bazę w produkcji. |
-| Osobne role personelu i widoki działów | Każdy zespół potrzebuje innych informacji i działań, a rola urządzenia pozostaje niezależna od aktualnie otwartego widoku działu. |
-| Adaptery integracyjne i lokalne migawki | Oddzielają podstawowy przepływ pracy od odczytu, uzgadniania i raportowania danych z usług zewnętrznych. |
-| Docker i osobna konfiguracja środowiska testowego | Zapewniają powtarzalne pakowanie aplikacji i możliwość sprawdzania zmian na odizolowanej bazie. |
-
-## Najważniejsze wyzwania techniczne
-
-W dokumencie [Wyzwania techniczne](docs/technical-challenges.md) opisujemy problemy, podejście projektowe i rezultaty. Omawiamy role i przepływy pracy, synchronizację zewnętrznych systemów, historię operacyjną oraz bezpieczne migracje bazy.
-
-## Model danych
-
-Model łączy rezerwacje z historią zmian, pozycjami menu, zapotrzebowaniem magazynowym, przydziałami personelu i migawkami raportowymi. Pełny schemat nie jest publikowany; poniższy diagram przedstawia uogólnione encje i nie zawiera danych osobowych ani pól specyficznych dla klienta.
+## Architektura
 
 ```mermaid
-erDiagram
-    RESERVATION ||--o{ RESERVATION_EVENT : rejestruje
-    RESERVATION ||--o{ MENU_LINE : zawiera
-    RESERVATION ||--o{ INVENTORY_REQUEST : wymaga
-    INVENTORY_ITEM ||--o{ INVENTORY_REQUEST : realizuje
-    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : śledzi
-    SHIFT ||--o{ STAFF_ASSIGNMENT : zawiera
-    REPORTING_PERIOD ||--o{ SALES_SNAPSHOT : podsumowuje
+flowchart LR
+    Staff[Personel<br/>telefon lub komputer] -->|HTTPS| App[Aplikacja Python<br/>HTML, CSS, JavaScript]
+    App --> DB[(PostgreSQL<br/>Supabase)]
+    App --> POS[Syrve<br/>rezerwacje, menu, raporty]
+    App --> Sheets[Google Sheets<br/>grafiki]
+    App --> Push[Web Push<br/>powiadomienia]
+    App -. obraz Docker .-> Host[Fly.io]
+    Local[Aplikacja lokalna] --> SQLite[(SQLite)]
 ```
 
-## Materiały wizualne
+Aplikacja działa jako jeden serwis webowy. Lokalnie może używać SQLite, a wdrożenie hostowane korzysta z PostgreSQL. Integracje z Syrve i Google Sheets dostarczają dane potrzebne w procesach operacyjnych; raporty miesięczne korzystają z zapisanych migawek. Środowisko testowe ma własną bazę danych.
 
-W tej wersji nie publikujemy zrzutów ekranu ani linku do systemu produkcyjnego. Można je dodać po potwierdzeniu zgody klienta oraz zastąpieniu prawdziwych nazw, logo i danych operacyjnych zatwierdzonymi lub wygenerowanymi przykładami. Nie używamy fikcyjnych zrzutów ani wymyślonych wskaźników.
+### Stos technologiczny
 
-## Zakres i prywatność
+| Technologia | Rola w projekcie |
+|---|---|
+| Python 3.12+ | Serwer HTTP, logika rezerwacji i procesów operacyjnych. |
+| HTML, CSS, JavaScript | Interfejs dostępny z telefonów i komputerów, bez osobnego serwera frontendu. |
+| Vite, PostCSS | Budowanie i optymalizacja arkuszy CSS. |
+| SQLite, PostgreSQL | SQLite dla pracy lokalnej, PostgreSQL dla wdrożenia hostowanego. |
+| Syrve | Dane POS wykorzystywane w rezerwacjach, menu i raportowaniu. |
+| Google Sheets API | Źródło grafików personelu. |
+| Web Push | Powiadomienia przeglądarkowe. |
+| Docker, Fly.io | Powtarzalne pakowanie i wdrażanie aplikacji. |
 
-To repozytorium jest case study, a nie uruchamialną aplikacją. Nie zawiera kodu źródłowego, zrzutów bazy, danych logowania, rekordów klientów ani identyfikatorów wdrożenia. Zasady dodawania materiałów opisujemy w dokumencie [Zakres i prywatność](docs/scope-and-privacy.md).
+## Decyzje i wyzwania techniczne
 
-## O tym case study
+- **Rola a widok działu:** oddzieliliśmy uprawnienia urządzenia od aktualnie otwartego ekranu, aby zmiana widoku nie zmieniała kontekstu dostępu.
+- **Rezerwacja jako źródło zadań:** rozdzieliliśmy dane rezerwacji od powtarzalnych pozycji menu, historii zmian i zapotrzebowania magazynowego.
+- **Dane zewnętrzne:** odseparowaliśmy integracje, lokalne odwzorowanie danych POS i miesięczne migawki raportowe od bieżącej edycji rezerwacji.
+- **Bezpieczne migracje:** produkcyjny start aplikacji nie modyfikuje schematu. Migracje uruchamiamy osobno, najpierw w trybie próbnym, a zmiany produkcyjne wymagają jawnego potwierdzenia.
 
-Opis koncentruje się na projekcie systemu i kompromisach inżynierskich. Nie ujawnia tożsamości klienta ani szczegółów jego działalności, dopóki publiczne wykorzystanie portfolio nie zostanie potwierdzone jako dozwolone.
+Więcej szczegółów: [architektura](docs/architecture.md), [wyzwania techniczne](docs/technical-challenges.md) i [przepływy operacyjne](docs/przeplywy-operacyjne.md).
+
+---
+
+Case study przedstawia projekt pod nazwą **KidsOffice**. Repozytorium zawiera dokumentację projektu; kod aplikacji i dane operacyjne pozostają w prywatnym repozytorium.
