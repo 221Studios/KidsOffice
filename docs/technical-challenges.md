@@ -1,39 +1,39 @@
-# Technical challenges
+# Wyzwania techniczne
 
-This document describes engineering problems visible in the project design and the approaches used to address them. It avoids customer data and does not claim unmeasured performance or business outcomes.
+Ten dokument opisuje problemy inżynierskie widoczne w projekcie systemu oraz zastosowane podejście. Nie ujawnia danych klienta i nie przypisuje projektowi niezmierzonych wyników.
 
-## 1. One operating day, several staff workflows
+## 1. Jeden dzień operacyjny, wiele przepływów pracy
 
-**Problem.** Organizers, reception, shift leads, kitchen, animators, HR, and service staff share information but need different actions during a shift. A department screen is not the same thing as the identity or permissions assigned to a device.
+**Problem.** Organizatorzy, recepcja, kierownicy zmiany, kuchnia, animatorzy, HR i serwis współdzielą informacje, ale podczas zmiany potrzebują różnych działań. Widok działu nie jest tym samym co tożsamość ani uprawnienia przypisane do urządzenia.
 
-**Approach.** The application models staff role and department view separately. Role-scoped access gates sensitive workflows, while department views present the relevant tasks over shared operational records. Reservation changes retain a history entry with the acting role, and deleted reservations have a separate history record.
+**Podejście.** System rozdziela rolę personelu od widoku działu. Uprawnienia wynikające z roli chronią poszczególne przepływy, a widoki działów pokazują odpowiednie zadania na wspólnych rekordach operacyjnych. Zmiany rezerwacji trafiają do historii wraz z rolą wykonującą zapis; usunięte rezerwacje mają osobną historię.
 
-**Outcome.** Staff can switch between task-focused screens without silently changing the device’s role context, and important reservation changes remain traceable. No user-level audit trail is claimed: the history identifies the role, not a named individual.
+**Rezultat.** Personel może przechodzić między widokami zadań bez niejawnej zmiany roli urządzenia, a ważne zmiany rezerwacji pozostają możliwe do prześledzenia. Historia nie identyfikuje konkretnej osoby — zapisuje rolę, a nie imię i nazwisko.
 
-## 2. External systems have different data shapes and availability
+## 2. Zewnętrzne systemy mają różne formaty danych i dostępność
 
-**Problem.** Booking and menu information comes from a POS integration, staff schedules come from a spreadsheet, and reporting needs stable monthly snapshots. Treating every external read as the live source of truth would couple routine shift work to those services.
+**Problem.** Dane o rezerwacjach i menu pochodzą z integracji POS, grafiki personelu z arkusza, a raportowanie wymaga stabilnych migawek miesięcznych. Używanie każdego zewnętrznego odczytu jako bieżącego źródła prawdy uzależniałoby codzienną pracę od dostępności tych usług.
 
-**Approach.** Integration code is separated by service. The application keeps selected POS catalog data in a local mirror, maps local operational concepts to external product identifiers, and stores reporting snapshots for monthly views. Schedule data is refreshed from its source rather than treated as application-owned staff data.
+**Podejście.** Kod integracyjny jest rozdzielony według usług. Wybrane dane katalogowe POS są przechowywane w lokalnym odwzorowaniu, a lokalne pojęcia operacyjne są mapowane na zewnętrzne identyfikatory produktów. Dane raportowe zapisuje się w migawkach dla widoków miesięcznych. Grafiki są odświeżane ze źródła zamiast traktować je jako dane personelu należące do aplikacji.
 
-**Outcome.** The application has explicit boundaries for external data and can present captured operational information without embedding provider-specific identifiers throughout every workflow. The case study does not claim a particular uptime or synchronization latency.
+**Rezultat.** Granice zewnętrznych integracji są jawne, a przepływy pracy nie muszą bezpośrednio zawierać identyfikatorów konkretnych dostawców. Case study nie deklaruje określonej dostępności usługi ani opóźnień synchronizacji.
 
-## 3. Reservation records evolve with operational needs
+## 3. Rezerwacje rozwijają się wraz z potrzebami operacyjnymi
 
-**Problem.** A booking can include multiple add-ons, cakes, menu lines, staff assignments, status changes, and later corrections. A single flat record becomes difficult to evolve and audit as these workflows grow.
+**Problem.** Rezerwacja może obejmować wiele dodatków, tortów, pozycji menu, przypisań personelu, zmian statusu i późniejszych korekt. Pojedynczy płaski rekord staje się trudny do rozwijania i audytowania, gdy dochodzą nowe przepływy pracy.
 
-**Approach.** The relational model keeps the reservation as the central record and separates repeatable or historical data into related collections, such as reservation history, menu lines, inventory requests, and sales snapshots. Schema changes are versioned as migrations.
+**Podejście.** Model relacyjny traktuje rezerwację jako rekord centralny, a powtarzalne lub historyczne dane przechowuje w powiązanych zbiorach, takich jak historia rezerwacji, pozycje menu, zapotrzebowanie magazynowe i migawki sprzedaży. Zmiany schematu są wersjonowane jako migracje.
 
-**Outcome.** The model supports richer operational detail while retaining the reservation as the shared reference for downstream tasks. Exact table definitions and client-specific fields are not published.
+**Rezultat.** Model obsługuje bogatsze szczegóły operacyjne, zachowując rezerwację jako wspólny punkt odniesienia dla kolejnych zadań. Dokładne definicje tabel i pola specyficzne dla klienta nie są publikowane.
 
-## 4. Production schema changes need an explicit safety boundary
+## 4. Zmiany schematu produkcyjnego wymagają jawnych zabezpieczeń
 
-**Problem.** A database migration that runs automatically during application startup can turn a deployment into an unreviewed production data change.
+**Problem.** Migracja uruchamiana automatycznie przy starcie aplikacji może zamienić wdrożenie w nieprzejrzystą zmianę danych produkcyjnych.
 
-**Approach.** Production startup skips schema initialization. Migrations are invoked explicitly, support a dry-run, and require an additional production opt-in before applying changes. Staging uses an isolated database rather than the production database.
+**Podejście.** Start aplikacji w produkcji pomija inicjalizację schematu. Migracje uruchamia się osobnym poleceniem, które obsługuje tryb próbny; zastosowanie zmian produkcyjnych wymaga dodatkowego jawnego potwierdzenia. Środowisko testowe korzysta z odizolowanej bazy.
 
-**Outcome.** Deploying the application and changing the production schema are separate, reviewable operations. This reduces accidental schema changes during routine restarts; it does not replace backups or a tested recovery plan.
+**Rezultat.** Wdrożenie aplikacji i zmiana schematu produkcyjnego są oddzielnymi, możliwymi do przejrzenia operacjami. Ogranicza to ryzyko przypadkowych zmian podczas restartu, ale nie zastępuje kopii zapasowych ani sprawdzonego planu odtwarzania.
 
-## Further evidence
+## Dalsze potwierdzenie
 
-The original implementation includes focused tests around reservations, access, integrations, reports, and migrations. This public case study intentionally excludes those source files and test code; no test count or coverage percentage is asserted here.
+Oryginalna implementacja zawiera testy dotyczące rezerwacji, dostępu, integracji, raportów i migracji. To publiczne case study nie zawiera plików źródłowych ani testów; nie podaje liczby testów ani procentowego pokrycia.

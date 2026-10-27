@@ -1,85 +1,85 @@
-# Park Operations Platform — Case Study
+# Platforma operacyjna parku — case study
 
-> A documentation-only portfolio case study. Application source code, customer data, credentials, and production screenshots are not included.
+> Publiczne case study zawierające wyłącznie dokumentację. Nie zawiera kodu aplikacji, danych klienta, danych logowania ani zrzutów ekranu z produkcji.
 
-I designed and built a mobile-first operations platform for a family entertainment venue. It brings the day’s bookings, staff handoffs, department tasks, inventory, and operational reporting into one shared workflow that staff can use from phones or desktop browsers.
+Zaplanowałem i zbudowałem mobilną platformę operacyjną dla rodzinnego centrum rozrywki. Łączy ona rezerwacje, przekazanie zmiany, zadania działów, inwenturę i raportowanie w jednym systemie dostępnym z telefonu i komputera.
 
-**Project type:** Internal operations platform · **Focus:** Product engineering, system design, integrations, operational safety
+**Typ projektu:** wewnętrzna platforma operacyjna · **Zakres:** inżynieria produktu, projektowanie systemu, integracje i bezpieczeństwo operacyjne
 
-## The problem
+## Problem
 
-Daily work crossed several roles and tools: staff needed to coordinate birthday bookings, floor assignments, schedules, kitchen and animator tasks, stock, and sales reporting. A change made in one place had to remain understandable to the next team taking over the shift. Some reference data also lived in external systems.
+Codzienna praca obejmowała wiele ról i narzędzi. Zespoły musiały koordynować rezerwacje urodzinowe, obsadę sali, grafiki, zadania kuchni i animatorów, zapasy oraz raporty sprzedaży. Informacje musiały być zrozumiałe dla kolejnego zespołu przejmującego zmianę, a część danych źródłowych znajdowała się w zewnętrznych systemach.
 
-The platform gives each department a focused view of the same operating day while keeping the underlying reservation and operational records connected.
+Platforma udostępnia każdemu działowi dopasowany widok tego samego dnia pracy, zachowując powiązania między rezerwacjami a zadaniami operacyjnymi.
 
-## What the platform supports
+## Zakres produktu
 
-- Birthday banquets and table reservations, with add-ons, menu lines, change history, and cancellation history.
-- Role-oriented mobile views for organizers, shift leads, reception, animators, kitchen, HR, and service teams.
-- Shift briefings, waiter-zone assignments, department schedules, and animator cleaning assignments.
-- Inventory counts, reservation-linked requests, shopping lists, and issue tracking.
-- Monthly operational reporting, including separate banquet and walk-in table-sales snapshots.
-- Integration paths for the POS, staff scheduling sheet, push notifications, and cloud-hosted relational storage.
+- Bankiety urodzinowe i rezerwacje stolików, wraz z dodatkami, pozycjami menu, historią zmian i anulowań.
+- Mobilne widoki dla organizatorów, kierowników zmiany, recepcji, animatorów, kuchni, HR i serwisu.
+- Odprawy zmianowe, przypisania kelnerów do stref, grafiki działów i zadania sprzątania dla animatorów.
+- Ewidencja zapasów, zapotrzebowanie powiązane z rezerwacjami, lista zakupów i śledzenie wydań.
+- Miesięczne raporty operacyjne, z osobnymi migawkami sprzedaży bankietowej i codziennej sprzedaży stolikowej.
+- Integracje z systemem POS, arkuszem grafików, powiadomieniami push i relacyjną bazą danych w chmurze.
 
-## Business value
+## Wartość biznesowa
 
-The product consolidates recurring shift work into one shared operational surface. It makes handoffs more explicit, gives departments task-specific views, and keeps booking changes traceable. The repository does not contain verified time-savings or revenue measurements, so this case study makes no quantified ROI claim.
+Produkt skupia powtarzalne zadania związane ze zmianą w jednym wspólnym miejscu. Ułatwia przekazywanie obowiązków, daje działom widoki dopasowane do ich zadań i pozwala prześledzić zmiany rezerwacji. Repozytorium nie zawiera zweryfikowanych pomiarów oszczędności czasu ani wzrostu przychodów, dlatego nie podaję liczbowego zwrotu z inwestycji.
 
-## System architecture
+## Architektura systemu
 
-The production design is a small server-rendered web application packaged as a Docker image. The application serves the mobile interface and coordinates persistence and external integrations. SQLite supports local development; the hosted setup uses PostgreSQL. External systems are accessed through dedicated integration paths, with selected data mirrored or snapshotted locally for operational reads.
+System produkcyjny jest aplikacją webową renderowaną po stronie serwera i pakowaną jako obraz Docker. Aplikacja obsługuje interfejs mobilny oraz koordynuje zapis danych i integracje zewnętrzne. Lokalnie korzysta z SQLite, a wdrożenie hostowane używa PostgreSQL. Wybrane dane z usług zewnętrznych są lokalnie odwzorowywane lub zapisywane w migawkach, aby wspierać odczyty operacyjne.
 
 ```mermaid
 flowchart LR
-    Staff[Staff phones and desktop browsers] -->|HTTPS| App[Python web application<br/>HTML, CSS, JavaScript]
-    App -->|local development| SQLite[(SQLite)]
-    App -->|hosted deployment| PG[(PostgreSQL<br/>Supabase)]
-    App -->|bookings, menu and product data| POS[Syrve]
-    App -->|schedule reads| Sheets[Google Sheets]
-    App -->|subscription notifications| Push[Web Push services]
-    App -. deployed as Docker image .-> Host[Fly.io]
+    Staff[Telefony i komputery personelu] -->|HTTPS| App[Aplikacja webowa w Pythonie<br/>HTML, CSS, JavaScript]
+    App -->|środowisko lokalne| SQLite[(SQLite)]
+    App -->|wdrożenie hostowane| PG[(PostgreSQL<br/>Supabase)]
+    App -->|rezerwacje, menu i produkty| POS[Syrve]
+    App -->|odczyt grafików| Sheets[Google Sheets]
+    App -->|powiadomienia subskrybentów| Push[Web Push]
+    App -. obraz wdrożeniowy .-> Host[Fly.io]
 ```
 
-The diagram is a high-level view based on the project’s deployment and integration configuration. It intentionally omits customer identifiers, hostnames, credentials, and network details.
+Diagram przedstawia ogólny obraz oparty na konfiguracji wdrożeń i integracji projektu. Pomija identyfikatory klienta, adresy hostów, dane dostępowe i szczegóły sieci.
 
-## Technical decisions
+## Decyzje techniczne
 
-| Decision | Reason |
+| Decyzja | Uzasadnienie |
 |---|---|
-| Python application with a lightweight HTTP layer | Keeps the operational workflows in a small deployable service without requiring a separate frontend server. |
-| HTML, CSS, and JavaScript with a mobile-first interface | Staff use the system during active shifts, often from phones; core tasks need to remain direct and quick to reach. |
-| SQLite locally and PostgreSQL in the hosted environment | Makes local development self-contained while supporting a managed relational database in deployment. |
-| Explicit role and department views | Different staff need different actions and information, while a device’s staff role remains distinct from the currently open department screen. |
-| External-system adapters and local snapshots | Keeps the core workflow usable when external data must be read, reconciled, or reported on separately. |
-| Docker and staged deployment configuration | Gives production and staging repeatable application packaging and a place to verify changes against an isolated database. |
+| Aplikacja w Pythonie z lekką warstwą HTTP | Utrzymuje przepływy operacyjne w niewielkiej usłudze, bez osobnego serwera frontendu. |
+| HTML, CSS i JavaScript oraz interfejs mobilny | Personel korzysta z systemu podczas zmiany, często na telefonie; podstawowe zadania powinny być szybkie do znalezienia. |
+| SQLite lokalnie i PostgreSQL w środowisku hostowanym | Ułatwia lokalny rozwój, a jednocześnie zapewnia zarządzaną relacyjną bazę w produkcji. |
+| Osobne role personelu i widoki działów | Każdy zespół potrzebuje innych informacji i działań, a rola urządzenia pozostaje niezależna od aktualnie otwartego widoku działu. |
+| Adaptery integracyjne i lokalne migawki | Oddzielają podstawowy przepływ pracy od odczytu, uzgadniania i raportowania danych z usług zewnętrznych. |
+| Docker i osobna konfiguracja środowiska testowego | Zapewniają powtarzalne pakowanie aplikacji i możliwość sprawdzania zmian na odizolowanej bazie. |
 
-## Selected technical challenges
+## Najważniejsze wyzwania techniczne
 
-See [Technical challenges](docs/technical-challenges.md) for the problem, design approach, and outcome for each item. Topics include role-aware workflows, external-system synchronization, auditable operational history, and safe database migrations.
+W dokumencie [Wyzwania techniczne](docs/technical-challenges.md) opisuję problemy, podejście projektowe i rezultaty. Omawiam role i przepływy pracy, synchronizację zewnętrznych systemów, historię operacyjną oraz bezpieczne migracje bazy.
 
-## Data model
+## Model danych
 
-The data model connects reservations with their history, menu lines, inventory requests, staffing assignments, and reporting snapshots. The full schema is intentionally not published; this conceptual diagram uses generic entities and excludes personal data and customer-specific fields.
+Model łączy rezerwacje z historią zmian, pozycjami menu, zapotrzebowaniem magazynowym, przydziałami personelu i migawkami raportowymi. Pełny schemat nie jest publikowany; poniższy diagram przedstawia uogólnione encje i nie zawiera danych osobowych ani pól specyficznych dla klienta.
 
 ```mermaid
 erDiagram
-    RESERVATION ||--o{ RESERVATION_EVENT : records
-    RESERVATION ||--o{ MENU_LINE : contains
-    RESERVATION ||--o{ INVENTORY_REQUEST : needs
-    INVENTORY_ITEM ||--o{ INVENTORY_REQUEST : fulfills
-    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : tracks
-    SHIFT ||--o{ STAFF_ASSIGNMENT : contains
-    REPORTING_PERIOD ||--o{ SALES_SNAPSHOT : summarizes
+    RESERVATION ||--o{ RESERVATION_EVENT : rejestruje
+    RESERVATION ||--o{ MENU_LINE : zawiera
+    RESERVATION ||--o{ INVENTORY_REQUEST : wymaga
+    INVENTORY_ITEM ||--o{ INVENTORY_REQUEST : realizuje
+    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : sledzi
+    SHIFT ||--o{ STAFF_ASSIGNMENT : zawiera
+    REPORTING_PERIOD ||--o{ SALES_SNAPSHOT : podsumowuje
 ```
 
-## Evidence and screenshots
+## Materiały wizualne
 
-No production screenshots or live-system link are included in this public-facing draft. They can be added after confirming client permission and replacing real names, logos, and operational data with approved or generated examples. No fabricated screenshots or metrics are used.
+W tej wersji nie publikuję zrzutów ekranu ani linku do systemu produkcyjnego. Można je dodać po potwierdzeniu zgody klienta oraz zastąpieniu prawdziwych nazw, logo i danych operacyjnych zatwierdzonymi lub wygenerowanymi przykładami. Nie używam fikcyjnych zrzutów ani wymyślonych wskaźników.
 
-## Scope and privacy
+## Zakres i prywatność
 
-This repository is a case study, not a runnable application. It contains no application source, database dumps, credentials, customer records, or client-specific deployment identifiers. See [Scope and privacy](docs/scope-and-privacy.md) before adding screenshots, a live link, or code excerpts.
+To repozytorium jest case study, a nie uruchamialną aplikacją. Nie zawiera kodu źródłowego, zrzutów bazy, danych logowania, rekordów klientów ani identyfikatorów wdrożenia. Zasady dodawania materiałów opisuję w dokumencie [Zakres i prywatność](docs/scope-and-privacy.md).
 
-## About this case study
+## O tym case study
 
-This write-up focuses on system design and engineering trade-offs. It avoids disclosing the customer’s identity and operational details until public portfolio use is confirmed as permitted.
+Opis koncentruje się na projekcie systemu i kompromisach inżynierskich. Nie ujawnia tożsamości klienta ani szczegółów jego działalności, dopóki publiczne wykorzystanie portfolio nie zostanie potwierdzone jako dozwolone.

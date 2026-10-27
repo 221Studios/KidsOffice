@@ -1,67 +1,67 @@
-# Architecture overview
+# Przegląd architektury
 
-## Runtime shape
+## Kształt systemu
 
-The product is a small Python web application. It serves a browser-based, mobile-first interface and owns the operational request flow. CSS is built as an asset before deployment; the application itself is packaged in Docker and deployed to a hosted application platform.
+Produkt jest niewielką aplikacją webową w Pythonie. Obsługuje przeglądarkowy interfejs mobilny i przepływy operacyjne. CSS jest budowany jako zasób przed wdrożeniem, a aplikację pakuje się do Dockera i uruchamia na hostowanej platformie.
 
 ```mermaid
 flowchart TB
-    Browser[Browser UI<br/>HTML, CSS, JavaScript] -->|HTTPS requests| Web[Python HTTP app]
-    Web --> Domain[Reservation and operations workflows]
-    Domain --> DB[(Relational storage)]
-    Domain --> POSAdapter[POS integration]
-    Domain --> ScheduleAdapter[Schedule integration]
-    Domain --> Notifications[Push notification sender]
-    POSAdapter <--> POS[POS API]
-    ScheduleAdapter --> Sheet[Scheduling spreadsheet]
-    Notifications --> PushSvc[Web Push endpoint]
-    Container[Docker image] -. runs on .-> Runtime[Hosted app runtime]
+    Browser[Interfejs przeglądarkowy<br/>HTML, CSS, JavaScript] -->|żądania HTTPS| Web[Aplikacja HTTP w Pythonie]
+    Web --> Domain[Przepływy rezerwacji i operacji]
+    Domain --> DB[(Baza relacyjna)]
+    Domain --> POSAdapter[Integracja POS]
+    Domain --> ScheduleAdapter[Integracja grafików]
+    Domain --> Notifications[Wysyłka powiadomień push]
+    POSAdapter <--> POS[API POS]
+    ScheduleAdapter --> Sheet[Arkusz grafików]
+    Notifications --> PushSvc[Usługa Web Push]
+    Container[Obraz Docker] -. działa na .-> Runtime[Hostowane środowisko]
     Runtime --> DB
 ```
 
-## Persistence and data boundaries
+## Trwałość danych i ich pochodzenie
 
-- **Operational records:** reservations, changes, staffing assignments, inventory, and related tasks.
-- **External reference data:** selected POS menu and product data, refreshed into a local read model where needed.
-- **Schedules:** sourced from a scheduling spreadsheet and refreshed into the app’s operational views.
-- **Reporting snapshots:** captured monthly values used for historical reporting, separate from live reservation editing.
-- **Local development:** SQLite keeps setup self-contained.
-- **Hosted deployment:** PostgreSQL provides the production relational store.
+- **Rekordy operacyjne:** rezerwacje, historia zmian, przypisania personelu, inwentura i powiązane zadania.
+- **Zewnętrzne dane referencyjne:** wybrane dane menu i produktów POS, odświeżane i lokalnie odwzorowywane tam, gdzie są potrzebne.
+- **Grafiki:** pobierane z arkusza i odświeżane w widokach aplikacji.
+- **Migawki raportowe:** zapisane wartości używane w historycznych raportach, oddzielone od bieżącej edycji rezerwacji.
+- **Lokalny rozwój:** SQLite upraszcza uruchomienie środowiska.
+- **Wdrożenie hostowane:** PostgreSQL przechowuje dane relacyjne.
 
-## Conceptual entity relationships
+## Konceptualne relacje encji
 
 ```mermaid
 erDiagram
-    RESERVATION ||--o{ RESERVATION_HISTORY : has
-    RESERVATION ||--o{ MENU_LINE : includes
-    RESERVATION ||--o{ INVENTORY_LINE : requests
-    INVENTORY_ITEM ||--o{ INVENTORY_LINE : referenced_by
-    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : changes
-    WORK_DATE ||--o{ ZONE_ASSIGNMENT : groups
-    REPORTING_PERIOD ||--o{ BANQUET_SNAPSHOT : captures
-    REPORTING_PERIOD ||--o{ TABLE_SALES_SNAPSHOT : captures
+    RESERVATION ||--o{ RESERVATION_HISTORY : ma
+    RESERVATION ||--o{ MENU_LINE : zawiera
+    RESERVATION ||--o{ INVENTORY_LINE : wymaga
+    INVENTORY_ITEM ||--o{ INVENTORY_LINE : jest_powiazany_z
+    INVENTORY_ITEM ||--o{ INVENTORY_MOVEMENT : rejestruje
+    WORK_DATE ||--o{ ZONE_ASSIGNMENT : grupuje
+    REPORTING_PERIOD ||--o{ BANQUET_SNAPSHOT : zapisuje
+    REPORTING_PERIOD ||--o{ TABLE_SALES_SNAPSHOT : zapisuje
 ```
 
-The entity names are generalized for portfolio use. This is not an export of the production schema.
+Nazwy encji są uogólnione na potrzeby portfolio. Diagram nie jest eksportem produkcyjnego schematu.
 
-## Integration principles
+## Zasady integracji
 
-1. Keep provider-specific calls behind integration modules.
-2. Distinguish locally owned operational data from data read from an external source.
-3. Capture historical reporting values when a stable point-in-time view is needed.
-4. Keep staging storage isolated from production storage.
-5. Apply production schema changes through an explicit migration command rather than app startup.
+1. Wywołania dostawców zewnętrznych pozostają za modułami integracyjnymi.
+2. Dane operacyjne należące do aplikacji są odróżnione od danych odczytywanych ze źródeł zewnętrznych.
+3. Wartości raportowe są zapisywane w migawkach, gdy potrzebny jest stabilny widok historyczny.
+4. Baza środowiska testowego jest odizolowana od produkcyjnej.
+5. Zmiany schematu produkcyjnego wykonuje się jawnym poleceniem migracji, a nie podczas startu aplikacji.
 
-## Technology choices
+## Dobór technologii
 
-| Area | Technology | Role |
+| Obszar | Technologia | Zastosowanie |
 |---|---|---|
-| Application | Python 3.12+ | HTTP handling and operational workflows |
-| Interface | HTML, CSS, JavaScript | Mobile-first browser interface |
-| CSS build | Vite and PostCSS | Build and minify CSS assets |
-| Local database | SQLite | Self-contained development and local demo |
-| Hosted database | PostgreSQL | Hosted relational persistence |
-| Deployment | Docker and Fly.io | Repeatable application image and hosted runtime |
-| POS integration | Syrve APIs | Reservation, menu, and reporting data paths |
-| Schedule source | Google Sheets API | Staff schedule reads |
-| Notifications | Web Push | Browser push notifications |
+| Aplikacja | Python 3.12+ | Obsługa HTTP i przepływy operacyjne |
+| Interfejs | HTML, CSS, JavaScript | Mobilny interfejs w przeglądarce |
+| Budowanie CSS | Vite i PostCSS | Budowanie i minifikacja zasobów CSS |
+| Lokalna baza | SQLite | Samodzielne środowisko deweloperskie i lokalna demonstracja |
+| Baza hostowana | PostgreSQL | Relacyjna baza danych dla wdrożenia hostowanego |
+| Wdrożenie | Docker i Fly.io | Powtarzalny obraz aplikacji i hostowane środowisko |
+| Integracja POS | API Syrve | Przepływy rezerwacji, menu i raportowania |
+| Źródło grafik | Google Sheets API | Odczyt grafików personelu |
+| Powiadomienia | Web Push | Powiadomienia przeglądarkowe |
