@@ -1,4 +1,6 @@
-# KidsOffice
+# Kids Office
+
+![Logo 221](docs/assets/logo-221.webp)
 
 ### System operacyjny dla parku rozrywki
 
@@ -79,4 +81,4 @@ Więcej szczegółów: [architektura](docs/architecture.md), [wyzwania techniczn
 
 ---
 
-Case study przedstawia projekt pod nazwą **KidsOffice**. Repozytorium zawiera dokumentację projektu; kod aplikacji i dane operacyjne pozostają w prywatnym repozytorium.
+Case study przedstawia projekt pod nazwą **Kids Office**. Repozytorium zawiera dokumentację projektu; kod aplikacji i dane operacyjne pozostają w prywatnym repozytorium.
